@@ -1,374 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inventory Manager</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
-  <style>
-    .hover\:scale-105:hover{transform:scale(1.05)}
-    .transition-transform{transition:transform .2s}
-    .transition-all{transition:all .2s}
-    .transition-opacity{transition:opacity .2s}
-    .transition-colors{transition:color .2s}
-    .group:hover .group-hover\:opacity-100{opacity:1}
-    .group-hover\:opacity-100{opacity:0}
-    .group:hover .group-hover\:text-indigo-400{color:#818cf8}
-    .group:hover .group-hover\:text-green-500{color:#22c55e}
-    .group:hover .group-hover\:border-indigo-300{border-color:#a5b4fc}
-    .group:hover .group-hover\:shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1)}
-    .group:hover .group-hover\:shadow-xl{box-shadow:0 20px 25px -5px rgba(0,0,0,.1)}
-    .group:hover .group-hover\:border-green-400{border-color:#4ade80}
-    .animate-fade{animation:fade .15s ease-in}
-    @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Inventory Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#f9fafb;min-height:100vh}
+button{cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* Header */
+#header{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+#header-inner{max-width:900px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+#back-btn{border:none;background:#f3f4f6;border-radius:10px;padding:7px 12px;font-size:16px;display:none}
+#back-btn.show{display:block}
+#breadcrumb{flex:1;font-size:14px;color:#6b7280}
+#breadcrumb span{color:#111827;font-weight:700}
+#search-wrap{position:relative}
+#search-wrap .icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none}
+#search{padding:7px 10px 7px 28px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;width:170px}
+#export-btn{border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;padding:7px 10px;font-size:14px}
+
+/* Main */
+#main{max-width:900px;margin:0 auto;padding:24px 16px}
+
+/* Page title row */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:22px;font-weight:800;color:#111827}
+.page-sub{font-size:13px;color:#9ca3af;margin-top:3px}
+.btn-primary{border:none;border-radius:12px;padding:9px 16px;font-size:14px;font-weight:600;color:#fff;background:#4f46e5}
+.btn-green{background:#059669}
+.btn-orange{background:#ea580c}
+
+/* Cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+
+/* Location card */
+.loc-card{background:#fff;border-radius:16px;border:2px solid #f3f4f6;box-shadow:0 1px 3px rgba(0,0,0,.05);cursor:pointer;overflow:hidden;position:relative;transition:all .15s}
+.loc-card:hover{border-color:#a5b4fc;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.loc-card .top-bar{height:6px;background:linear-gradient(to right,#6366f1,#a855f7)}
+.loc-card .body{padding:18px}
+.loc-card .row{display:flex;align-items:flex-start;justify-content:space-between}
+.loc-card .icon-wrap{width:40px;height:40px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.loc-card .info{margin-left:10px}
+.loc-card .name{font-weight:700;font-size:15px;color:#111827}
+.loc-card .meta{font-size:12px;color:#9ca3af;margin-top:2px}
+.loc-card .chevron{color:#d1d5db;font-size:18px;margin-top:2px}
+.loc-card:hover .chevron{color:#818cf8}
+.loc-card .bars{display:flex;gap:4px;margin-top:12px}
+.loc-card .bar{height:6px;flex:1;border-radius:99px}
+.loc-card .actions{position:absolute;top:10px;right:10px;display:none;gap:4px}
+.loc-card:hover .actions{display:flex}
+.act-btn{border-radius:8px;padding:4px 8px;font-size:12px;border:1px solid #e5e7eb;background:#fff}
+.act-btn.del{border-color:#fee2e2;color:#ef4444}
+
+/* Floor plan */
+.floor-plan{background:#f3f4f6;border-radius:24px;padding:24px;border:4px solid #e5e7eb;min-height:260px}
+.divider{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.divider .line{height:1px;flex:1;background:#d1d5db}
+.divider .label{font-size:12px;color:#9ca3af;font-weight:600;padding:0 8px}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.room-tile{border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;box-shadow:0 2px 8px rgba(0,0,0,.1);position:relative}
+.room-tile:hover{transform:scale(1.05);box-shadow:0 12px 24px rgba(0,0,0,.15)}
+.room-inner{padding:14px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.room-label{font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.room-name{color:#fff;font-weight:700;font-size:15px;line-height:1.2}
+.room-meta{color:rgba(255,255,255,.7);font-size:12px;margin-top:2px}
+.room-door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:28px;background:rgba(255,255,255,.2);border-radius:8px 8px 0 0;border:2px solid rgba(255,255,255,.3)}
+.room-acts{position:absolute;top:8px;right:8px;display:none;gap:3px}
+.room-tile:hover .room-acts{display:flex}
+.room-act{border:none;background:rgba(255,255,255,.25);border-radius:6px;padding:3px 6px;font-size:11px;color:#fff}
+.add-tile{border-radius:16px;border:2px dashed #d1d5db;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#9ca3af;background:transparent;font-size:14px;font-weight:600;transition:all .15s}
+.add-tile:hover{border-color:#818cf8;color:#6366f1;background:#eef2ff}
+
+/* Shelf unit */
+.shelf-unit{background:#fffbeb;border-radius:24px;padding:24px;border:4px solid #fde68a}
+.shelf-unit .divider .line{background:#fcd34d}
+.shelf-unit .divider .label{color:#92400e}
+.shelf-row{background:#fff;border-radius:12px;border:2px solid #fde68a;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;margin-bottom:8px;position:relative}
+.shelf-row:hover{border-color:#4ade80;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.shelf-num{width:28px;height:28px;border-radius:8px;background:#fef3c7;color:#b45309;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.shelf-name{font-weight:600;color:#111827;flex:1}
+.shelf-meta{font-size:12px;color:#9ca3af}
+.shelf-acts{display:none;gap:4px}
+.shelf-row:hover .shelf-acts{display:flex}
+.shelf-floor{height:12px;background:#fcd34d;border-radius:8px;margin-top:4px}
+
+/* Layer cards */
+.layer-card{background:#fff;border-radius:16px;border:2px solid #fed7aa;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:12px}
+.layer-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(to right,#fff7ed,#fffbeb);border-bottom:1px solid #fed7aa}
+.layer-num{width:26px;height:26px;border-radius:8px;background:#ea580c;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.layer-name{font-weight:600;color:#111827;flex:1}
+.layer-count{font-size:12px;color:#9ca3af}
+.layer-body{padding:10px}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.item-card{background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;position:relative}
+.item-card:hover .item-acts{display:flex}
+.item-icon{font-size:16px;margin-top:1px}
+.item-name{font-weight:600;font-size:13px;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-meta{font-size:12px;color:#6b7280}
+.item-acts{display:none;gap:2px;flex-shrink:0}
+.add-item-btn{width:100%;border:2px dashed #e5e7eb;border-radius:10px;padding:14px 0;color:#9ca3af;background:transparent;font-size:13px;transition:all .15s}
+.add-item-btn:hover{border-color:#f97316;color:#ea580c}
+
+/* Empty states */
+.empty{text-align:center;padding:60px 0;color:#9ca3af}
+.empty .emoji{font-size:52px;margin-bottom:10px}
+.empty p{font-weight:600;font-size:15px}
+.empty small{font-size:13px;margin-top:4px;display:block}
+
+/* Modal */
+#modal-overlay{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6)}
+#modal-overlay.show{display:flex}
+#modal-box{background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,.25);width:100%;max-width:420px}
+#modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e5e7eb}
+#modal-title{font-weight:700;font-size:17px}
+#modal-close{border:none;background:none;font-size:22px;color:#6b7280;padding:0 4px;line-height:1}
+#modal-body{padding:20px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px}
+.field input,.field textarea{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-size:14px;outline:none;font-family:inherit}
+.field textarea{resize:none}
+.modal-btns{display:flex;gap:8px;margin-top:4px}
+.modal-btns button{flex:1;border-radius:10px;padding:9px 0;font-size:14px;font-weight:600;border:none}
+.btn-cancel{border:1.5px solid #e5e7eb!important;background:#fff;color:#374151}
+.btn-save{background:#4f46e5;color:#fff}
+
+/* Search results */
+.search-results .s-card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:10px 14px;display:flex;gap:10px;margin-bottom:8px}
+.s-card .s-name{font-weight:600;font-size:14px}
+.s-card .s-path{font-size:12px;color:#9ca3af}
+</style>
 </head>
-<body class="bg-gray-50 m-0 p-0">
-<div id="root"></div>
-<script type="text/babel" data-presets="react">
-const { useState, useEffect } = React;
-const STORAGE_KEY = "visual_inventory_v2";
-const uid = () => Math.random().toString(36).slice(2,9);
+<body>
+
+<div id="header">
+  <div id="header-inner">
+    <button id="back-btn" onclick="goBack()">←</button>
+    <div id="breadcrumb">📦 <span>Locations</span></div>
+    <div id="search-wrap">
+      <span class="icon">🔍</span>
+      <input id="search" placeholder="Search items..." oninput="renderSearch(this.value)"/>
+    </div>
+    <button id="export-btn" onclick="exportCSV()">⬇️ CSV</button>
+  </div>
+</div>
+
+<div id="main"></div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <div id="modal-title"></div>
+      <button id="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const KEY = 'inv_v3';
+let data = JSON.parse(localStorage.getItem(KEY) || '{"locations":[]}');
+let nav = []; // [locId, roomId, shelfId]
+
 const COLORS = [
-  ["#3b82f6","#2563eb"],["#8b5cf6","#7c3aed"],["#10b981","#059669"],
-  ["#f97316","#ea580c"],["#ec4899","#db2777"],["#14b8a6","#0d9488"],
-  ["#ef4444","#dc2626"],["#6366f1","#4f46e5"],["#eab308","#ca8a04"],["#06b6d4","#0891b2"]
+  ['#3b82f6','#2563eb'],['#8b5cf6','#7c3aed'],['#10b981','#059669'],
+  ['#f97316','#ea580c'],['#ec4899','#db2777'],['#14b8a6','#0d9488'],
+  ['#ef4444','#dc2626'],['#6366f1','#4f46e5'],['#eab308','#ca8a04'],['#06b6d4','#0891b2']
 ];
 
-function Modal({title,onClose,children}){
-  return React.createElement('div',{style:{position:'fixed',inset:0,zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:16,background:'rgba(0,0,0,0.6)'}},
-    React.createElement('div',{style:{background:'#fff',borderRadius:16,boxShadow:'0 25px 50px rgba(0,0,0,0.25)',width:'100%',maxWidth:440}},
-      React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #e5e7eb'}},
-        React.createElement('h2',{style:{fontWeight:700,fontSize:17,margin:0}},title),
-        React.createElement('button',{onClick:onClose,style:{border:'none',background:'none',cursor:'pointer',fontSize:20,color:'#6b7280',padding:'0 4px'}},'×')
-      ),
-      React.createElement('div',{style:{padding:20}},children)
-    )
-  );
+function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function curLoc(){ return data.locations.find(l=>l.id===nav[0]); }
+function curRoom(){ return curLoc()?.rooms?.find(r=>r.id===nav[1]); }
+function curShelf(){ return curRoom()?.shelves?.find(s=>s.id===nav[2]); }
+
+function updateBreadcrumb(){
+  const loc=curLoc(), room=curRoom(), shelf=curShelf();
+  let html='📦 ';
+  if(!loc){ html+='<span>Locations</span>'; }
+  else if(!room){ html+=`<a href="#" onclick="nav=[nav[0]];render();return false">${loc.name}</a> › <span>${loc.name}</span>`; }
+  else if(!shelf){ html+=`<a href="#" onclick="nav=[];render();return false">Locations</a> › <a href="#" onclick="nav=[nav[0]];render();return false">${loc.name}</a> › <span>${room.name}</span>`; }
+  else { html+=`<a href="#" onclick="nav=[];render();return false">Locations</a> › <a href="#" onclick="nav=[nav[0]];render();return false">${loc.name}</a> › <a href="#" onclick="nav=[nav[0],nav[1]];render();return false">${room.name}</a> › <span>${shelf.name}</span>`; }
+  document.getElementById('breadcrumb').innerHTML = html;
+  const bb = document.getElementById('back-btn');
+  bb.className = nav.length > 0 ? 'show' : '';
 }
 
-function Input({label,value,onChange,type='text',placeholder,rows}){
-  const style={width:'100%',border:'1.5px solid #e5e7eb',borderRadius:10,padding:'8px 12px',fontSize:14,outline:'none',boxSizing:'border-box',fontFamily:'inherit'};
-  return React.createElement('div',{style:{marginBottom:12}},
-    React.createElement('label',{style:{display:'block',fontSize:13,fontWeight:600,color:'#374151',marginBottom:4}},label),
-    rows
-      ? React.createElement('textarea',{value,onChange,placeholder,rows,style:{...style,resize:'none'}})
-      : React.createElement('input',{type,value,onChange,placeholder,style})
-  );
+function goBack(){ nav=nav.slice(0,-1); render(); }
+
+function render(){
+  updateBreadcrumb();
+  const q = document.getElementById('search').value.trim();
+  if(q){ renderSearch(q); return; }
+  const loc=curLoc(), room=curRoom(), shelf=curShelf();
+  if(shelf) renderShelf();
+  else if(room) renderRoom();
+  else if(loc) renderBuilding();
+  else renderLocations();
 }
 
-function SimpleForm({label,initial='',onSave,onClose,extraFields=[],extraInit={}}){
-  const [name,setName]=useState(initial);
-  const [ext,setExt]=useState(extraInit);
-  const btn={background:name.trim()?'#4f46e5':'#c7d2fe',color:'#fff',border:'none',borderRadius:10,padding:'9px 0',fontSize:14,fontWeight:600,cursor:name.trim()?'pointer':'default',flex:1};
-  return React.createElement('div',null,
-    React.createElement(Input,{label:`${label} Name *`,value:name,onChange:e=>setName(e.target.value),placeholder:`Enter ${label.toLowerCase()} name`}),
-    extraFields.map(f=>React.createElement(Input,{key:f.key,label:f.label,value:ext[f.key]??'',onChange:e=>setExt(p=>({...p,[f.key]:e.target.value})),type:f.type||'text',placeholder:f.placeholder,rows:f.rows})),
-    React.createElement('div',{style:{display:'flex',gap:8,marginTop:4}},
-      React.createElement('button',{onClick:onClose,style:{flex:1,border:'1.5px solid #e5e7eb',borderRadius:10,padding:'9px 0',fontSize:14,fontWeight:600,background:'#fff',cursor:'pointer'}},'Cancel'),
-      React.createElement('button',{onClick:()=>name.trim()&&onSave(name.trim(),ext),style:btn},'✓ Save')
-    )
-  );
+/* ── LOCATIONS ─────────────────────────────── */
+function locItemCount(loc){
+  return (loc.rooms||[]).flatMap(r=>(r.shelves||[]).flatMap(s=>(s.layers||[]).flatMap(l=>l.items||[]))).length;
 }
 
-function Crumb({crumbs,onNav}){
-  return React.createElement('div',{style:{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap',fontSize:14}},
-    crumbs.map((c,i)=>React.createElement('span',{key:i,style:{display:'flex',alignItems:'center',gap:4}},
-      i>0&&React.createElement('span',{style:{color:'#d1d5db'}},'›'),
-      React.createElement('button',{onClick:()=>onNav(i),style:{border:'none',background:'none',cursor:'pointer',fontWeight:i===crumbs.length-1?700:400,color:i===crumbs.length-1?'#111827':'#6b7280',padding:0,fontSize:14}},c)
-    ))
-  );
+function renderLocations(){
+  const m = document.getElementById('main');
+  let html = `<div class="page-header">
+    <div><div class="page-title">Locations</div></div>
+    <button class="btn-primary" onclick="openModal('addLoc')">+ Add Location</button>
+  </div>`;
+  if(!data.locations.length){
+    html+=`<div class="empty"><div class="emoji">🏢</div><p>No locations yet</p><small>Click "+ Add Location" to get started</small></div>`;
+  } else {
+    html+='<div class="grid">';
+    data.locations.forEach((loc,i)=>{
+      const rooms=(loc.rooms||[]).length, items=locItemCount(loc);
+      const bars=(loc.rooms||[]).slice(0,6).map((_,j)=>{
+        const [c1,c2]=COLORS[j%COLORS.length];
+        return `<div class="bar" style="background:linear-gradient(to right,${c1},${c2});opacity:.65"></div>`;
+      }).join('') || '<div class="bar" style="background:#f3f4f6"></div>';
+      html+=`<div class="loc-card" onclick="nav=[\'${loc.id}\'];render()">
+        <div class="top-bar"></div>
+        <div class="body">
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="icon-wrap">🏢</div>
+              <div class="info"><div class="name">${esc(loc.name)}</div><div class="meta">${rooms} rooms · ${items} items</div></div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+          <div class="bars">${bars}</div>
+        </div>
+        <div class="actions" onclick="event.stopPropagation()">
+          <button class="act-btn" onclick="openModal('editLoc','${loc.id}')">✏️</button>
+          <button class="act-btn del" onclick="delLoc('${loc.id}')">🗑</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  m.innerHTML = html;
 }
 
-function LocationCard({loc,onSelect,onEdit,onDelete}){
-  const [hover,setHover]=useState(false);
-  const total=(loc.rooms||[]).flatMap(r=>(r.shelves||[]).flatMap(s=>(s.layers||[]).flatMap(l=>l.items||[]))).length;
-  return React.createElement('div',{
-    onClick:()=>onSelect(loc),onMouseEnter:()=>setHover(true),onMouseLeave:()=>setHover(false),
-    style:{background:'#fff',borderRadius:16,border:`2px solid ${hover?'#a5b4fc':'#f3f4f6'}`,boxShadow:hover?'0 10px 25px rgba(0,0,0,0.1)':'0 1px 3px rgba(0,0,0,0.05)',cursor:'pointer',overflow:'hidden',position:'relative',transition:'all .2s'}
-  },
-    React.createElement('div',{style:{height:6,background:'linear-gradient(to right,#6366f1,#a855f7)'}}),
-    React.createElement('div',{style:{padding:20}},
-      React.createElement('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
-        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12}},
-          React.createElement('div',{style:{width:40,height:40,borderRadius:12,background:'#eef2ff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}},'🏢'),
-          React.createElement('div',null,
-            React.createElement('div',{style:{fontWeight:700,fontSize:16,color:'#111827'}},loc.name),
-            React.createElement('div',{style:{fontSize:12,color:'#9ca3af',marginTop:2}},`${(loc.rooms||[]).length} rooms · ${total} items`)
-          )
-        ),
-        React.createElement('span',{style:{color:hover?'#818cf8':'#d1d5db',fontSize:18}},'›')
-      ),
-      React.createElement('div',{style:{display:'flex',gap:4,marginTop:14}},
-        (loc.rooms||[]).length===0
-          ? React.createElement('div',{style:{height:6,flex:1,borderRadius:99,background:'#f3f4f6'}})
-          : (loc.rooms||[]).slice(0,6).map((r,i)=>React.createElement('div',{key:r.id,style:{height:6,flex:1,borderRadius:99,background:`linear-gradient(to right,${COLORS[i%COLORS.length][0]},${COLORS[i%COLORS.length][1]})`,opacity:.65}}))
-      )
-    ),
-    hover&&React.createElement('div',{style:{position:'absolute',top:10,right:10,display:'flex',gap:4},onClick:e=>e.stopPropagation()},
-      React.createElement('button',{onClick:()=>onEdit(loc),style:{border:'1px solid #e5e7eb',background:'#fff',borderRadius:8,padding:'4px 7px',cursor:'pointer',fontSize:13}},'✏️'),
-      React.createElement('button',{onClick:()=>onDelete(loc.id),style:{border:'1px solid #fee2e2',background:'#fff',borderRadius:8,padding:'4px 7px',cursor:'pointer',fontSize:13,color:'#ef4444'}},'🗑')
-    )
-  );
+/* ── BUILDING / ROOMS ───────────────────────── */
+function renderBuilding(){
+  const loc=curLoc(), rooms=loc.rooms||[];
+  let html=`<div class="page-header">
+    <div><div class="page-title">${esc(loc.name)}</div><div class="page-sub">${rooms.length} rooms — click a room to manage shelves</div></div>
+    <button class="btn-primary" onclick="openModal('addRoom')">+ Add Room</button>
+  </div>
+  <div class="floor-plan">
+    <div class="divider"><div class="line"></div><div class="label">🏢 FLOOR PLAN</div><div class="line"></div></div>`;
+  if(!rooms.length){
+    html+=`<div class="empty"><div class="emoji">🚪</div><p>No rooms yet</p><small>Click "Add Room" to place the first room</small></div>`;
+  } else {
+    html+='<div class="rooms-grid">';
+    rooms.forEach((room,i)=>{
+      const [c1,c2]=COLORS[i%COLORS.length];
+      const shelves=(room.shelves||[]).length;
+      const items=(room.shelves||[]).flatMap(s=>(s.layers||[]).flatMap(l=>l.items||[])).length;
+      html+=`<div class="room-tile" onclick="nav=[nav[0],'${room.id}'];render()">
+        <div class="room-inner" style="background:linear-gradient(135deg,${c1},${c2})">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="room-label">Room</div>
+            <div class="room-acts" onclick="event.stopPropagation()">
+              <button class="room-act" onclick="openModal('editRoom','${room.id}')">✏️</button>
+              <button class="room-act" onclick="delRoom('${room.id}')">🗑</button>
+            </div>
+          </div>
+          <div><div class="room-name">${esc(room.name)}</div><div class="room-meta">${shelves} shelves · ${items} items</div></div>
+          <div class="room-door"></div>
+        </div>
+      </div>`;
+    });
+    html+=`<button class="add-tile" onclick="openModal('addRoom')"><span style="font-size:22px">+</span>Add Room</button>`;
+    html+='</div>';
+  }
+  html+='</div>';
+  document.getElementById('main').innerHTML=html;
 }
 
-function BuildingView({loc,onRoom,onAddRoom,onEditRoom,onDelRoom}){
-  const rooms=loc.rooms||[];
-  return React.createElement('div',null,
-    React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}},
-      React.createElement('div',null,
-        React.createElement('h2',{style:{fontSize:24,fontWeight:800,margin:0}},loc.name),
-        React.createElement('p',{style:{fontSize:13,color:'#9ca3af',margin:'4px 0 0'}},`${rooms.length} rooms — click a room to manage shelves`)
-      ),
-      React.createElement('button',{onClick:onAddRoom,style:{display:'flex',alignItems:'center',gap:6,background:'#4f46e5',color:'#fff',border:'none',borderRadius:12,padding:'9px 16px',fontSize:14,fontWeight:600,cursor:'pointer'}},'+ Add Room')
-    ),
-    React.createElement('div',{style:{background:'#f3f4f6',borderRadius:24,padding:24,border:'4px solid #e5e7eb',minHeight:280}},
-      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:16}},
-        React.createElement('div',{style:{height:1,flex:1,background:'#d1d5db'}}),
-        React.createElement('span',{style:{fontSize:12,color:'#9ca3af',fontWeight:600,padding:'0 8px'}},'🏢 FLOOR PLAN'),
-        React.createElement('div',{style:{height:1,flex:1,background:'#d1d5db'}})
-      ),
-      rooms.length===0
-        ? React.createElement('div',{style:{textAlign:'center',padding:'60px 0',color:'#9ca3af'}},
-            React.createElement('div',{style:{fontSize:48,marginBottom:8}},'🚪'),
-            React.createElement('p',{style:{margin:0,fontWeight:600}},'No rooms yet'),
-            React.createElement('p',{style:{margin:'4px 0 0',fontSize:13}},'Click "Add Room" to get started')
-          )
-        : React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:12}},
-            rooms.map((room,i)=>{
-              const itemCount=(room.shelves||[]).flatMap(s=>(s.layers||[]).flatMap(l=>l.items||[])).length;
-              const [c1,c2]=COLORS[i%COLORS.length];
-              const [hov,setHov]=useState(false);
-              return React.createElement('div',{key:room.id,onClick:()=>onRoom(room),onMouseEnter:()=>setHov(true),onMouseLeave:()=>setHov(false),
-                style:{borderRadius:16,overflow:'hidden',cursor:'pointer',transform:hov?'scale(1.04)':'scale(1)',transition:'transform .15s',boxShadow:hov?'0 12px 24px rgba(0,0,0,0.15)':'0 2px 8px rgba(0,0,0,0.1)',position:'relative'}},
-                React.createElement('div',{style:{background:`linear-gradient(135deg,${c1},${c2})`,padding:16,minHeight:110,display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative'}},
-                  React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-                    React.createElement('span',{style:{fontSize:10,color:'rgba(255,255,255,0.75)',fontWeight:600,textTransform:'uppercase',letterSpacing:1}},'Room'),
-                    hov&&React.createElement('div',{style:{display:'flex',gap:3},onClick:e=>e.stopPropagation()},
-                      React.createElement('button',{onClick:()=>onEditRoom(room),style:{border:'none',background:'rgba(255,255,255,0.25)',borderRadius:6,padding:'2px 5px',cursor:'pointer',fontSize:11,color:'#fff'}},'✏️'),
-                      React.createElement('button',{onClick:()=>onDelRoom(room.id),style:{border:'none',background:'rgba(255,255,255,0.25)',borderRadius:6,padding:'2px 5px',cursor:'pointer',fontSize:11,color:'#fff'}},'🗑')
-                    )
-                  ),
-                  React.createElement('div',null,
-                    React.createElement('div',{style:{color:'#fff',fontWeight:700,fontSize:15,lineHeight:1.2}},room.name),
-                    React.createElement('div',{style:{color:'rgba(255,255,255,0.7)',fontSize:12,marginTop:2}},`${(room.shelves||[]).length} shelves · ${itemCount} items`)
-                  ),
-                  React.createElement('div',{style:{position:'absolute',bottom:0,left:'50%',transform:'translateX(-50%)',width:22,height:30,background:'rgba(255,255,255,0.2)',borderRadius:'8px 8px 0 0',border:'2px solid rgba(255,255,255,0.3)'}})
-                )
-              );
-            }),
-            React.createElement('button',{onClick:onAddRoom,style:{borderRadius:16,border:'2px dashed #d1d5db',minHeight:110,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,color:'#9ca3af',background:'transparent',cursor:'pointer',fontSize:14,fontWeight:600}},
-              React.createElement('span',{style:{fontSize:22}},'+'),
-              'Add Room'
-            )
-          )
-    )
-  );
+/* ── ROOM / SHELVES ─────────────────────────── */
+function renderRoom(){
+  const room=curRoom(), shelves=room.shelves||[];
+  let html=`<div class="page-header">
+    <div><div class="page-title">${esc(room.name)}</div><div class="page-sub">${shelves.length} shelves</div></div>
+    <button class="btn-primary btn-green" onclick="openModal('addShelf')">+ Add Shelf</button>
+  </div>
+  <div class="shelf-unit">
+    <div class="divider"><div class="line"></div><div class="label">🗄️ SHELF UNIT</div><div class="line"></div></div>`;
+  if(!shelves.length){
+    html+=`<div class="empty"><div class="emoji">📦</div><p>No shelves yet</p></div>`;
+  } else {
+    shelves.forEach((shelf,i)=>{
+      const layers=(shelf.layers||[]).length;
+      const items=(shelf.layers||[]).flatMap(l=>l.items||[]).length;
+      html+=`<div class="shelf-row" onclick="nav=[nav[0],nav[1],'${shelf.id}'];render()">
+        <div class="shelf-num">${i+1}</div>
+        <div style="flex:1">
+          <div class="shelf-name">${esc(shelf.name)}</div>
+          <div class="shelf-meta">${layers} layers · ${items} items</div>
+        </div>
+        <div class="shelf-acts" onclick="event.stopPropagation()">
+          <button class="act-btn" onclick="openModal('editShelf','${shelf.id}')">✏️</button>
+          <button class="act-btn del" onclick="delShelf('${shelf.id}')">🗑</button>
+        </div>
+        <div style="color:#d1d5db;font-size:18px">›</div>
+      </div>`;
+    });
+    html+=`<div class="shelf-floor"></div>`;
+  }
+  html+='</div>';
+  document.getElementById('main').innerHTML=html;
 }
 
-function RoomView({room,onShelf,onAddShelf,onEditShelf,onDelShelf}){
-  const shelves=room.shelves||[];
-  return React.createElement('div',null,
-    React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}},
-      React.createElement('div',null,
-        React.createElement('h2',{style:{fontSize:24,fontWeight:800,margin:0}},room.name),
-        React.createElement('p',{style:{fontSize:13,color:'#9ca3af',margin:'4px 0 0'}},`${shelves.length} shelves`)
-      ),
-      React.createElement('button',{onClick:onAddShelf,style:{display:'flex',alignItems:'center',gap:6,background:'#059669',color:'#fff',border:'none',borderRadius:12,padding:'9px 16px',fontSize:14,fontWeight:600,cursor:'pointer'}},'+ Add Shelf')
-    ),
-    React.createElement('div',{style:{background:'#fffbeb',borderRadius:24,padding:24,border:'4px solid #fde68a'}},
-      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:16}},
-        React.createElement('div',{style:{height:1,flex:1,background:'#fcd34d'}}),
-        React.createElement('span',{style:{fontSize:12,color:'#92400e',fontWeight:600,padding:'0 8px'}},'🗄️ SHELF UNIT'),
-        React.createElement('div',{style:{height:1,flex:1,background:'#fcd34d'}})
-      ),
-      shelves.length===0
-        ? React.createElement('div',{style:{textAlign:'center',padding:'60px 0',color:'#b45309'}},
-            React.createElement('div',{style:{fontSize:48,marginBottom:8}},'📦'),
-            React.createElement('p',{style:{margin:0,fontWeight:600}},'No shelves yet')
-          )
-        : React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:8}},
-            shelves.map((shelf,i)=>{
-              const itemCount=(shelf.layers||[]).flatMap(l=>l.items||[]).length;
-              const [hov,setHov]=useState(false);
-              return React.createElement('div',{key:shelf.id,onClick:()=>onShelf(shelf),onMouseEnter:()=>setHov(true),onMouseLeave:()=>setHov(false),
-                style:{background:'#fff',borderRadius:12,border:`2px solid ${hov?'#4ade80':'#fde68a'}`,padding:'12px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:12,boxShadow:hov?'0 4px 12px rgba(0,0,0,0.08)':'none',transition:'all .15s'}},
-                React.createElement('div',{style:{width:28,height:28,borderRadius:8,background:'#fef3c7',color:'#b45309',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}},i+1),
-                React.createElement('div',{style:{flex:1}},
-                  React.createElement('div',{style:{fontWeight:600,color:'#111827'}},shelf.name),
-                  React.createElement('div',{style:{fontSize:12,color:'#9ca3af'}},`${(shelf.layers||[]).length} layers · ${itemCount} items`)
-                ),
-                hov&&React.createElement('div',{style:{display:'flex',gap:4},onClick:e=>e.stopPropagation()},
-                  React.createElement('button',{onClick:()=>onEditShelf(shelf),style:{border:'1px solid #e5e7eb',background:'#fff',borderRadius:7,padding:'3px 7px',cursor:'pointer',fontSize:12}},'✏️'),
-                  React.createElement('button',{onClick:()=>onDelShelf(shelf.id),style:{border:'1px solid #fee2e2',background:'#fff',borderRadius:7,padding:'3px 7px',cursor:'pointer',fontSize:12,color:'#ef4444'}},'🗑')
-                ),
-                React.createElement('span',{style:{color:hov?'#22c55e':'#d1d5db',fontSize:18}},'›')
-              );
-            })
-          ),
-      React.createElement('div',{style:{height:12,background:'#fcd34d',borderRadius:8,marginTop:12}})
-    )
-  );
+/* ── SHELF / LAYERS + ITEMS ─────────────────── */
+function renderShelf(){
+  const shelf=curShelf(), layers=shelf.layers||[];
+  let html=`<div class="page-header">
+    <div><div class="page-title">${esc(shelf.name)}</div><div class="page-sub">${layers.length} layers</div></div>
+    <button class="btn-primary btn-orange" onclick="openModal('addLayer')">+ Add Layer</button>
+  </div>`;
+  if(!layers.length){
+    html+=`<div class="empty"><div class="emoji">🗂️</div><p>No layers yet</p><small>Add a layer to start tracking items</small></div>`;
+  }
+  layers.forEach((layer,i)=>{
+    const items=layer.items||[];
+    let itemsHtml='';
+    if(!items.length){
+      itemsHtml=`<button class="add-item-btn" onclick="openModal('addItem','${layer.id}')">+ Add first item</button>`;
+    } else {
+      itemsHtml='<div class="items-grid">';
+      items.forEach(item=>{
+        itemsHtml+=`<div class="item-card">
+          <div class="item-icon">📦</div>
+          <div style="flex:1;min-width:0">
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="item-meta">Qty: <b>${item.quantity}</b>${item.notes?` · ${esc(item.notes)}`:''}</div>
+          </div>
+          <div class="item-acts">
+            <button class="act-btn" onclick="openModal('editItem','${layer.id}','${item.id}')">✏️</button>
+            <button class="act-btn del" onclick="delItem('${layer.id}','${item.id}')">🗑</button>
+          </div>
+        </div>`;
+      });
+      itemsHtml+='</div>';
+    }
+    html+=`<div class="layer-card">
+      <div class="layer-header">
+        <div class="layer-num">${i+1}</div>
+        <div class="layer-name">${esc(layer.name)}</div>
+        <div class="layer-count">${items.length} items</div>
+        <button class="act-btn" style="padding:3px 7px;font-size:12px;background:#fed7aa;border-color:#fed7aa;color:#c2410c" onclick="openModal('addItem','${layer.id}')">+</button>
+        <button class="act-btn" style="padding:3px 7px;font-size:12px" onclick="openModal('editLayer','${layer.id}')">✏️</button>
+        <button class="act-btn del" style="padding:3px 7px;font-size:12px" onclick="delLayer('${layer.id}')">🗑</button>
+      </div>
+      <div class="layer-body">${itemsHtml}</div>
+    </div>`;
+  });
+  document.getElementById('main').innerHTML=html;
 }
 
-function ShelfView({shelf,onUpdate}){
-  const [layers,setLayers]=useState(shelf.layers||[]);
-  const [modal,setModal]=useState(null);
-  useEffect(()=>onUpdate({...shelf,layers}),[layers]);
-  const addLayer=name=>{setLayers(p=>[...p,{id:uid(),name,items:[]}]);setModal(null);};
-  const editLayer=(id,name)=>{setLayers(p=>p.map(l=>l.id===id?{...l,name}:l));setModal(null);};
-  const delLayer=id=>{if(confirm('Delete layer?'))setLayers(p=>p.filter(l=>l.id!==id));};
-  const addItem=(lid,name,ext)=>{setLayers(p=>p.map(l=>l.id===lid?{...l,items:[...l.items,{id:uid(),name,quantity:Number(ext.quantity)||0,notes:ext.notes||''}]}:l));setModal(null);};
-  const editItem=(lid,item,name,ext)=>{setLayers(p=>p.map(l=>l.id===lid?{...l,items:l.items.map(i=>i.id===item.id?{...i,name,quantity:Number(ext.quantity)||0,notes:ext.notes||''}:i)}:l));setModal(null);};
-  const delItem=(lid,iid)=>setLayers(p=>p.map(l=>l.id===lid?{...l,items:l.items.filter(i=>i.id!==iid)}:l));
-  return React.createElement('div',null,
-    React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}},
-      React.createElement('div',null,
-        React.createElement('h2',{style:{fontSize:24,fontWeight:800,margin:0}},shelf.name),
-        React.createElement('p',{style:{fontSize:13,color:'#9ca3af',margin:'4px 0 0'}},`${layers.length} layers`)
-      ),
-      React.createElement('button',{onClick:()=>setModal({t:'addLayer'}),style:{background:'#ea580c',color:'#fff',border:'none',borderRadius:12,padding:'9px 16px',fontSize:14,fontWeight:600,cursor:'pointer'}},'+ Add Layer')
-    ),
-    layers.length===0&&React.createElement('div',{style:{textAlign:'center',padding:'60px 0',color:'#9ca3af'}},
-      React.createElement('div',{style:{fontSize:48,marginBottom:8}},'🗂️'),
-      React.createElement('p',{style:{margin:0}},'No layers yet')
-    ),
-    React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:12}},
-      layers.map((layer,i)=>React.createElement('div',{key:layer.id,style:{background:'#fff',borderRadius:16,border:'2px solid #fed7aa',overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}},
-        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'linear-gradient(to right,#fff7ed,#fffbeb)',borderBottom:'1px solid #fed7aa'}},
-          React.createElement('div',{style:{width:26,height:26,borderRadius:8,background:'#ea580c',color:'#fff',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}},i+1),
-          React.createElement('span',{style:{fontWeight:600,color:'#111827',flex:1}},layer.name),
-          React.createElement('span',{style:{fontSize:12,color:'#9ca3af'}},`${layer.items.length} items`),
-          React.createElement('button',{onClick:()=>setModal({t:'addItem',lid:layer.id}),style:{border:'none',background:'#fed7aa',borderRadius:7,padding:'4px 8px',cursor:'pointer',fontSize:12,fontWeight:600,color:'#c2410c'}},'+'),
-          React.createElement('button',{onClick:()=>setModal({t:'editLayer',layer}),style:{border:'none',background:'#f3f4f6',borderRadius:7,padding:'4px 8px',cursor:'pointer',fontSize:12}},'✏️'),
-          React.createElement('button',{onClick:()=>delLayer(layer.id),style:{border:'none',background:'#fee2e2',borderRadius:7,padding:'4px 8px',cursor:'pointer',fontSize:12,color:'#ef4444'}},'🗑')
-        ),
-        React.createElement('div',{style:{padding:10}},
-          layer.items.length===0
-            ? React.createElement('button',{onClick:()=>setModal({t:'addItem',lid:layer.id}),style:{width:'100%',border:'2px dashed #e5e7eb',borderRadius:10,padding:'14px 0',color:'#9ca3af',background:'transparent',cursor:'pointer',fontSize:13}},
-                '+ Add first item'
-              )
-            : React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:8}},
-                layer.items.map(item=>{
-                  const [hov,setHov]=useState(false);
-                  return React.createElement('div',{key:item.id,onMouseEnter:()=>setHov(true),onMouseLeave:()=>setHov(false),
-                    style:{background:'#f9fafb',borderRadius:10,border:'1px solid #f3f4f6',padding:'8px 10px',display:'flex',gap:8,alignItems:'flex-start',position:'relative'}},
-                    React.createElement('span',{style:{fontSize:16,marginTop:1}},'📦'),
-                    React.createElement('div',{style:{flex:1,minWidth:0}},
-                      React.createElement('div',{style:{fontWeight:600,fontSize:13,color:'#111827',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},item.name),
-                      React.createElement('div',{style:{fontSize:12,color:'#6b7280'}},`Qty: ${item.quantity}${item.notes?` · ${item.notes}`:''}`)
-                    ),
-                    hov&&React.createElement('div',{style:{display:'flex',gap:2,flexShrink:0}},
-                      React.createElement('button',{onClick:()=>setModal({t:'editItem',lid:layer.id,item}),style:{border:'none',background:'#e5e7eb',borderRadius:5,padding:'2px 5px',cursor:'pointer',fontSize:11}},'✏️'),
-                      React.createElement('button',{onClick:()=>delItem(layer.id,item.id),style:{border:'none',background:'#fee2e2',borderRadius:5,padding:'2px 5px',cursor:'pointer',fontSize:11,color:'#ef4444'}},'🗑')
-                    )
-                  );
-                })
-              )
-        )
-      ))
-    ),
-    modal?.t==='addLayer'&&React.createElement(Modal,{title:'Add Layer',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Layer',onSave:n=>addLayer(n),onClose:()=>setModal(null)})),
-    modal?.t==='editLayer'&&React.createElement(Modal,{title:'Edit Layer',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Layer',initial:modal.layer.name,onSave:n=>editLayer(modal.layer.id,n),onClose:()=>setModal(null)})),
-    modal?.t==='addItem'&&React.createElement(Modal,{title:'Add Item',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Item',onSave:(n,e)=>addItem(modal.lid,n,e),onClose:()=>setModal(null),extraFields:[{key:'quantity',label:'Quantity',type:'number',placeholder:'0'},{key:'notes',label:'Notes',rows:2,placeholder:'Optional notes'}]})),
-    modal?.t==='editItem'&&React.createElement(Modal,{title:'Edit Item',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Item',initial:modal.item.name,onSave:(n,e)=>editItem(modal.lid,modal.item,n,e),onClose:()=>setModal(null),extraInit:{quantity:modal.item.quantity,notes:modal.item.notes},extraFields:[{key:'quantity',label:'Quantity',type:'number',placeholder:'0'},{key:'notes',label:'Notes',rows:2,placeholder:'Optional notes'}]}))
-  );
+/* ── SEARCH ─────────────────────────────────── */
+function renderSearch(q){
+  if(!q.trim()){ render(); return; }
+  const lq=q.toLowerCase(), res=[];
+  for(const l of data.locations) for(const r of l.rooms||[]) for(const s of r.shelves||[]) for(const ly of s.layers||[]) for(const it of ly.items||[])
+    if(it.name.toLowerCase().includes(lq)||(it.notes||'').toLowerCase().includes(lq))
+      res.push({loc:l.name,room:r.name,shelf:s.name,layer:ly.name,item:it});
+  let html=`<div class="page-header"><div class="page-title">Results for "${esc(q)}" (${res.length})</div></div><div class="search-results">`;
+  if(!res.length) html+=`<p style="color:#9ca3af">No items found.</p>`;
+  res.forEach(r=>{
+    html+=`<div class="s-card">
+      <span style="font-size:20px">📦</span>
+      <div>
+        <div class="s-name">${esc(r.item.name)} <span style="font-weight:400;color:#9ca3af">×${r.item.quantity}</span></div>
+        <div class="s-path">${esc(r.loc)} › ${esc(r.room)} › ${esc(r.shelf)} › ${esc(r.layer)}</div>
+        ${r.item.notes?`<div class="s-path" style="font-style:italic">${esc(r.item.notes)}</div>`:''}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('main').innerHTML=html;
 }
 
-function App(){
-  const [data,setData]=useState(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{locations:[]};}catch{return{locations:[]}}});
-  const [nav,setNav]=useState([]);
-  const [modal,setModal]=useState(null);
-  const [search,setSearch]=useState('');
-  useEffect(()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(data)),[data]);
-  const mutate=fn=>setData(p=>{const d=JSON.parse(JSON.stringify(p));fn(d);return d;});
-  const curLoc=nav[0]?data.locations.find(l=>l.id===nav[0]):null;
-  const curRoom=nav[1]?curLoc?.rooms?.find(r=>r.id===nav[1]):null;
-  const curShelf=nav[2]?curRoom?.shelves?.find(s=>s.id===nav[2]):null;
-  const crumbs=['📦 Locations',...(curLoc?[curLoc.name]:[]),...(curRoom?[curRoom.name]:[]),...(curShelf?[curShelf.name]:[])];
-  const addLoc=n=>{mutate(d=>d.locations.push({id:uid(),name:n,rooms:[]}));setModal(null);};
-  const editLoc=(id,n)=>{mutate(d=>{const l=d.locations.find(x=>x.id===id);if(l)l.name=n;});setModal(null);};
-  const delLoc=id=>{if(!confirm('Delete location?'))return;mutate(d=>{d.locations=d.locations.filter(x=>x.id!==id);});};
-  const addRoom=n=>{mutate(d=>d.locations.find(x=>x.id===curLoc.id).rooms.push({id:uid(),name:n,shelves:[]}));setModal(null);};
-  const editRoom=(id,n)=>{mutate(d=>{const r=d.locations.find(x=>x.id===curLoc.id).rooms.find(x=>x.id===id);if(r)r.name=n;});setModal(null);};
-  const delRoom=id=>{if(!confirm('Delete room?'))return;mutate(d=>{const l=d.locations.find(x=>x.id===curLoc.id);l.rooms=l.rooms.filter(x=>x.id!==id);});};
-  const addShelf=n=>{mutate(d=>d.locations.find(x=>x.id===curLoc.id).rooms.find(x=>x.id===curRoom.id).shelves.push({id:uid(),name:n,layers:[]}));setModal(null);};
-  const editShelf=(id,n)=>{mutate(d=>{const s=d.locations.find(x=>x.id===curLoc.id).rooms.find(x=>x.id===curRoom.id).shelves.find(x=>x.id===id);if(s)s.name=n;});setModal(null);};
-  const delShelf=id=>{if(!confirm('Delete shelf?'))return;mutate(d=>{const r=d.locations.find(x=>x.id===curLoc.id).rooms.find(x=>x.id===curRoom.id);r.shelves=r.shelves.filter(x=>x.id!==id);});};
-  const updateShelf=s=>mutate(d=>{const r=d.locations.find(x=>x.id===curLoc.id).rooms.find(x=>x.id===curRoom.id);const i=r.shelves.findIndex(x=>x.id===s.id);if(i>-1)r.shelves[i]=s;});
-  const exportCSV=()=>{
-    const rows=[['Location','Room','Shelf','Layer','Item','Quantity','Notes']];
-    for(const l of data.locations)for(const r of l.rooms||[])for(const s of r.shelves||[])for(const ly of s.layers||[])for(const it of ly.items||[])
-      rows.push([l.name,r.name,s.name,ly.name,it.name,it.quantity,it.notes||'']);
-    const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='inventory.csv';a.click();
-  };
-  const searchRes=search.trim()?()=>{
-    const q=search.toLowerCase(),res=[];
-    for(const l of data.locations)for(const r of l.rooms||[])for(const s of r.shelves||[])for(const ly of s.layers||[])for(const it of ly.items||[])
-      if(it.name.toLowerCase().includes(q)||(it.notes||'').toLowerCase().includes(q))res.push({loc:l.name,room:r.name,shelf:s.name,layer:ly.name,item:it});
-    return res;
-  }():null;
+/* ── MODAL ──────────────────────────────────── */
+let _modalCtx={};
+function openModal(type, id1, id2){
+  _modalCtx={type,id1,id2};
+  const title={
+    addLoc:'Add Location',editLoc:'Edit Location',
+    addRoom:'Add Room',editRoom:'Edit Room',
+    addShelf:'Add Shelf',editShelf:'Edit Shelf',
+    addLayer:'Add Layer',editLayer:'Edit Layer',
+    addItem:'Add Item',editItem:'Edit Item'
+  }[type];
+  document.getElementById('modal-title').textContent=title;
 
-  return React.createElement('div',{style:{minHeight:'100vh',background:'#f9fafb'}},
-    // Header
-    React.createElement('div',{style:{background:'#fff',borderBottom:'1px solid #e5e7eb',position:'sticky',top:0,zIndex:40,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}},
-      React.createElement('div',{style:{maxWidth:900,margin:'0 auto',padding:'10px 16px',display:'flex',alignItems:'center',gap:10}},
-        nav.length>0&&React.createElement('button',{onClick:()=>setNav(p=>p.slice(0,-1)),style:{border:'none',background:'#f3f4f6',borderRadius:10,padding:'7px 10px',cursor:'pointer',fontSize:16}},'←'),
-        React.createElement('div',{style:{flex:1}},React.createElement(Crumb,{crumbs,onNav:i=>setNav(nav.slice(0,i))})),
-        React.createElement('div',{style:{position:'relative'}},
-          React.createElement('span',{style:{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)',color:'#9ca3af',fontSize:14}},'🔍'),
-          React.createElement('input',{placeholder:'Search items...',value:search,onChange:e=>setSearch(e.target.value),style:{paddingLeft:28,paddingRight:10,paddingTop:7,paddingBottom:7,border:'1.5px solid #e5e7eb',borderRadius:10,fontSize:13,outline:'none',width:160}})
-        ),
-        React.createElement('button',{onClick:exportCSV,title:'Export CSV',style:{border:'1.5px solid #e5e7eb',background:'#fff',borderRadius:10,padding:'7px 10px',cursor:'pointer',fontSize:14}},'⬇️'),
-      )
-    ),
-    React.createElement('div',{style:{maxWidth:900,margin:'0 auto',padding:'24px 16px'}},
-      // Search results
-      searchRes&&React.createElement('div',null,
-        React.createElement('h3',{style:{fontWeight:700,marginBottom:12}},`Results for "${search}" (${searchRes.length})`),
-        searchRes.length===0?React.createElement('p',{style:{color:'#9ca3af'}},'No items found.'):
-        React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:8}},
-          searchRes.map((r,i)=>React.createElement('div',{key:i,style:{background:'#fff',borderRadius:12,border:'1px solid #e5e7eb',padding:'10px 14px',display:'flex',gap:10}},
-            React.createElement('span',{style:{fontSize:20}},'📦'),
-            React.createElement('div',null,
-              React.createElement('div',{style:{fontWeight:600,fontSize:14}},`${r.item.name} ×${r.item.quantity}`),
-              React.createElement('div',{style:{fontSize:12,color:'#9ca3af'}},`${r.loc} › ${r.room} › ${r.shelf} › ${r.layer}`),
-              r.item.notes&&React.createElement('div',{style:{fontSize:12,color:'#9ca3af',fontStyle:'italic'}},r.item.notes)
-            )
-          ))
-        )
-      ),
-      // Locations
-      !searchRes&&nav.length===0&&React.createElement('div',null,
-        React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}},
-          React.createElement('h1',{style:{fontSize:24,fontWeight:800,margin:0}},'Locations'),
-          React.createElement('button',{onClick:()=>setModal({t:'addLoc'}),style:{background:'#4f46e5',color:'#fff',border:'none',borderRadius:12,padding:'9px 16px',fontSize:14,fontWeight:600,cursor:'pointer'}},'+ Add Location')
-        ),
-        data.locations.length===0?React.createElement('div',{style:{textAlign:'center',padding:'80px 0',color:'#9ca3af'}},
-          React.createElement('div',{style:{fontSize:64,marginBottom:12}},'🏢'),
-          React.createElement('p',{style:{fontWeight:600,fontSize:16,margin:0}},'No locations yet'),
-          React.createElement('p',{style:{margin:'6px 0 0',fontSize:14}},'Click "+ Add Location" to get started')
-        ):React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:16}},
-          data.locations.map(loc=>React.createElement(LocationCard,{key:loc.id,loc,onSelect:l=>setNav([l.id]),onEdit:l=>setModal({t:'editLoc',loc:l}),onDelete:delLoc}))
-        )
-      ),
-      !searchRes&&nav.length===1&&curLoc&&React.createElement(BuildingView,{loc:curLoc,onRoom:r=>setNav(p=>[...p,r.id]),onAddRoom:()=>setModal({t:'addRoom'}),onEditRoom:r=>setModal({t:'editRoom',room:r}),onDelRoom:delRoom}),
-      !searchRes&&nav.length===2&&curRoom&&React.createElement(RoomView,{room:curRoom,onShelf:s=>setNav(p=>[...p,s.id]),onAddShelf:()=>setModal({t:'addShelf'}),onEditShelf:s=>setModal({t:'editShelf',shelf:s}),onDelShelf:delShelf}),
-      !searchRes&&nav.length===3&&curShelf&&React.createElement(ShelfView,{shelf:curShelf,onUpdate:updateShelf})
-    ),
-    modal?.t==='addLoc'&&React.createElement(Modal,{title:'Add Location',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Location',onSave:(n)=>addLoc(n),onClose:()=>setModal(null)})),
-    modal?.t==='editLoc'&&React.createElement(Modal,{title:'Edit Location',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Location',initial:modal.loc.name,onSave:n=>editLoc(modal.loc.id,n),onClose:()=>setModal(null)})),
-    modal?.t==='addRoom'&&React.createElement(Modal,{title:'Add Room',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Room',onSave:addRoom,onClose:()=>setModal(null)})),
-    modal?.t==='editRoom'&&React.createElement(Modal,{title:'Edit Room',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Room',initial:modal.room.name,onSave:n=>editRoom(modal.room.id,n),onClose:()=>setModal(null)})),
-    modal?.t==='addShelf'&&React.createElement(Modal,{title:'Add Shelf',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Shelf',onSave:addShelf,onClose:()=>setModal(null)})),
-    modal?.t==='editShelf'&&React.createElement(Modal,{title:'Edit Shelf',onClose:()=>setModal(null)},React.createElement(SimpleForm,{label:'Shelf',initial:modal.shelf.name,onSave:n=>editShelf(modal.shelf.id,n),onClose:()=>setModal(null)}))
-  );
+  let body='';
+  const nameField=(val='',label='Name')=>`<div class="field"><label>${label} *</label><input id="f-name" value="${esc(val)}" placeholder="Enter name" autofocus/></div>`;
+  const itemFields=(qty=0,notes='')=>`
+    <div class="field"><label>Quantity</label><input id="f-qty" type="number" value="${qty}" placeholder="0"/></div>
+    <div class="field"><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Optional">${esc(notes)}</textarea></div>`;
+
+  if(type==='editLoc'){ const l=data.locations.find(x=>x.id===id1); body=nameField(l.name,'Location'); }
+  else if(type==='editRoom'){ const r=curLoc().rooms.find(x=>x.id===id1); body=nameField(r.name,'Room'); }
+  else if(type==='editShelf'){ const s=curRoom().shelves.find(x=>x.id===id1); body=nameField(s.name,'Shelf'); }
+  else if(type==='editLayer'){ const ly=curShelf().layers.find(x=>x.id===id1); body=nameField(ly.name,'Layer'); }
+  else if(type==='editItem'){
+    const item=curShelf().layers.find(x=>x.id===id1).items.find(x=>x.id===id2);
+    body=nameField(item.name,'Item')+itemFields(item.quantity,item.notes);
+  }
+  else if(type==='addItem') body=nameField('','Item')+itemFields();
+  else body=nameField('',{addLoc:'Location',addRoom:'Room',addShelf:'Shelf',addLayer:'Layer'}[type]);
+
+  body+=`<div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveModal()">✓ Save</button></div>`;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').className='show';
+  setTimeout(()=>document.getElementById('f-name')?.focus(),50);
 }
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+
+function closeModal(){ document.getElementById('modal-overlay').className=''; }
+
+function saveModal(){
+  const name=document.getElementById('f-name')?.value?.trim();
+  if(!name) return;
+  const qty=Number(document.getElementById('f-qty')?.value)||0;
+  const notes=document.getElementById('f-notes')?.value||'';
+  const {type,id1,id2}=_modalCtx;
+
+  if(type==='addLoc') data.locations.push({id:uid(),name,rooms:[]});
+  else if(type==='editLoc'){ data.locations.find(x=>x.id===id1).name=name; }
+  else if(type==='addRoom') curLoc().rooms.push({id:uid(),name,shelves:[]});
+  else if(type==='editRoom'){ curLoc().rooms.find(x=>x.id===id1).name=name; }
+  else if(type==='addShelf') curRoom().shelves.push({id:uid(),name,layers:[]});
+  else if(type==='editShelf'){ curRoom().shelves.find(x=>x.id===id1).name=name; }
+  else if(type==='addLayer') curShelf().layers.push({id:uid(),name,items:[]});
+  else if(type==='editLayer'){ curShelf().layers.find(x=>x.id===id1).name=name; }
+  else if(type==='addItem') curShelf().layers.find(x=>x.id===id1).items.push({id:uid(),name,quantity:qty,notes});
+  else if(type==='editItem'){ const item=curShelf().layers.find(x=>x.id===id1).items.find(x=>x.id===id2); item.name=name;item.quantity=qty;item.notes=notes; }
+
+  save(); closeModal(); render();
+}
+
+/* ── DELETE ─────────────────────────────────── */
+function delLoc(id){ if(!confirm('Delete location and all contents?'))return; data.locations=data.locations.filter(x=>x.id!==id); save(); render(); }
+function delRoom(id){ if(!confirm('Delete room?'))return; const l=curLoc(); l.rooms=l.rooms.filter(x=>x.id!==id); save(); render(); }
+function delShelf(id){ if(!confirm('Delete shelf?'))return; const r=curRoom(); r.shelves=r.shelves.filter(x=>x.id!==id); save(); render(); }
+function delLayer(id){ if(!confirm('Delete layer?'))return; const s=curShelf(); s.layers=s.layers.filter(x=>x.id!==id); save(); render(); }
+function delItem(lid,iid){ const l=curShelf().layers.find(x=>x.id===lid); l.items=l.items.filter(x=>x.id!==iid); save(); render(); }
+
+/* ── EXPORT ─────────────────────────────────── */
+function exportCSV(){
+  const rows=[['Location','Room','Shelf','Layer','Item','Quantity','Notes']];
+  for(const l of data.locations) for(const r of l.rooms||[]) for(const s of r.shelves||[]) for(const ly of s.layers||[]) for(const it of ly.items||[])
+    rows.push([l.name,r.name,s.name,ly.name,it.name,it.quantity,it.notes||'']);
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='inventory.csv';a.click();
+}
+
+/* ── UTILS ──────────────────────────────────── */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Enter key in modal
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('modal-overlay').className==='show'&&e.target.tagName!=='TEXTAREA') saveModal(); });
+
+render();
 </script>
 </body>
 </html>
